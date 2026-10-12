@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>リハ利用者動向</title>
+<style>
+:root { --teal:#00AA9B; --teal-d:#00796F; --bg:#f6f7f7; --card:#fff; --ink:#1d2424; --sub:#5b6666; --line:#e2e6e6; --warn:#b3261e; --warn-bg:#fdecea; --soft:#e6f6f4; }
+@media (prefers-color-scheme: dark) { :root { --bg:#141818; --card:#1d2323; --ink:#e8eeee; --sub:#a4b0b0; --line:#2e3838; --warn:#ff8a80; --warn-bg:#3a1f1d; --soft:#173230; --teal-d:#5fd3c7; } }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--bg); color:var(--ink); font-family:system-ui,-apple-system,"Hiragino Sans","Yu Gothic UI",sans-serif; font-size:15px; }
+header { position:sticky; top:0; background:var(--teal); color:#fff; padding:10px 16px; display:flex; align-items:center; gap:8px; z-index:5; }
+header h1 { font-size:16px; margin:0; font-weight:600; flex:1; }
+header small { opacity:.9; font-size:12px; }
+header button { background:rgba(255,255,255,.18); color:#fff; border:1px solid rgba(255,255,255,.5); border-radius:8px; padding:6px 10px; font-size:13px; }
+main { max-width:720px; margin:0 auto; padding:12px 16px 96px; }
+@media (min-width:900px) { main { max-width:1100px; } .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; } }
+nav { position:fixed; bottom:0; left:0; right:0; background:var(--card); border-top:1px solid var(--line); display:flex; z-index:5; }
+nav button { flex:1; background:none; border:0; padding:12px 0 14px; color:var(--sub); font-size:13px; }
+nav button.on { color:var(--teal-d); font-weight:600; box-shadow:inset 0 3px 0 var(--teal); }
+.card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:12px 14px; margin-bottom:12px; }
+.card h2 { font-size:14px; margin:0 0 8px; }
+.row { display:flex; justify-content:space-between; gap:8px; padding:7px 0; border-bottom:1px solid var(--line); font-size:13px; }
+.row:last-child { border-bottom:0; }
+.row .sub { color:var(--sub); text-align:right; }
+.tag { font-size:11px; padding:1px 7px; border-radius:6px; background:var(--soft); color:var(--teal-d); white-space:nowrap; }
+.tag.warn { background:var(--warn-bg); color:var(--warn); }
+.tiles { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:12px; }
+.tile { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:8px 10px; }
+.tile small { display:block; color:var(--sub); font-size:11px; }
+.tile b { font-size:22px; font-weight:600; }
+.pager { display:flex; align-items:center; justify-content:center; gap:16px; margin:4px 0 12px; }
+.pager button { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:6px 14px; color:var(--ink); }
+.pager button:disabled { opacity:.35; }
+table { width:100%; border-collapse:collapse; font-size:12px; }
+th, td { padding:5px 4px; border-bottom:1px solid var(--line); text-align:right; white-space:nowrap; }
+th:first-child, td:first-child { text-align:left; }
+.scroll { overflow-x:auto; }
+.muted { color:var(--sub); font-size:12px; }
+.err { background:var(--warn-bg); color:var(--warn); padding:8px 12px; border-radius:8px; margin-bottom:12px; font-size:13px; }
+.fab { position:fixed; right:16px; bottom:72px; background:var(--teal); color:#fff; border:0; border-radius:24px; padding:12px 18px; font-size:15px; z-index:6; }
+.sheet { position:fixed; inset:0; background:rgba(0,0,0,.4); display:flex; align-items:flex-end; justify-content:center; z-index:10; }
+.sheet > div { background:var(--card); width:100%; max-width:560px; border-radius:16px 16px 0 0; padding:16px; max-height:90vh; overflow:auto; }
+label { display:block; font-size:12px; color:var(--sub); margin:10px 0 4px; }
+input, select, textarea { width:100%; padding:9px 10px; border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--ink); font-size:15px; }
+.btns { display:flex; gap:8px; margin-top:14px; }
+.btns button { flex:1; padding:11px; border-radius:10px; border:1px solid var(--line); background:var(--card); color:var(--ink); font-size:15px; }
+.btns .primary { background:var(--teal); color:#fff; border-color:var(--teal); }
+.funnel { display:flex; align-items:flex-end; gap:6px; height:110px; }
+.funnel div { flex:1; border-radius:6px 6px 0 0; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; font-size:11px; padding-bottom:4px; color:#fff; }
+.chart { position:relative; height:220px; }
+</style>
+</head>
+<body>
+<script>if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') document.write('<script src="mock.js"><\/script>');</script>
+<header><h1>リハ利用者動向</h1><small id="stamp"></small><button id="refresh">最新にする</button></header>
+<main id="main"></main>
+<button class="fab" id="fab">＋記録</button>
+<nav><button data-v="now" class="on">いま</button><button data-v="month">月の一覧</button><button data-v="ki">期のダッシュボード</button></nav>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+(function () {
+  var API_URL = 'https://script.google.com/macros/s/AKfycbwU2ww4No6ez-ccMJmOX7YeyMmgMHgbZNmjqvnSU4m_ZCLEtEKKV-VkmLz57FqJ8kY/exec';   // GAS の /exec（デプロイ時に入れる。デプロイ手順.md）
+  var S = { view: 'now', token: load('rd2_token'), dev: load('rd2_dev') || newId(), now: null, ym: '', ki: null, charts: [] };
+  store('rd2_dev', S.dev);
+  var $ = function (id) { return document.getElementById(id); };
+
+  function store(k, v) { try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) {} }
+  function load(k) { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } }
+  function newId() { return 'id-' + Math.random().toString(36).slice(2, 12) + Date.now().toString(36); }
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function md(d) { return d ? (+d.slice(5, 7)) + '/' + (+d.slice(8, 10)) : ''; }
+  function ymLabel(ym) { return ym.slice(0, 4) + '年' + (+ym.slice(5, 7)) + '月'; }
+  function addMonths(ym, n) { var t = +ym.slice(0, 4) * 12 + (+ym.slice(5, 7) - 1) + n; return Math.floor(t / 12) + '-' + ('0' + (t % 12 + 1)).slice(-2); }
+
+  async function api(req) {
+    if (window.MOCK_READY) await window.MOCK_READY;
+    req.token = S.token;
+    var res;
+    try {
+      if (window.MOCK_API) res = await window.MOCK_API(req);
+      else res = await (await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(req) })).json();
+    } catch (e) { throw new Error('通信できませんでした。電波の良い所でもう一度押してください'); }
+    if (!res.ok) {
+      if (res.authError) { S.token = ''; store('rd2_token', null); showLogin(res.error); }
+      throw new Error(res.error);
+    }
+    return res.data;
+  }
+
+  function showLogin(msg) {
+    $('main').innerHTML = '<div class="card"><h2>PINを入れてください</h2>' + (msg ? '<div class="err">' + esc(msg) + '</div>' : '')
+      + '<input id="pin" type="password" inputmode="numeric" autocomplete="current-password"><div class="btns"><button class="primary" id="go">ひらく</button></div></div>';
+    $('go').onclick = async function () {
+      try { var d = await api({ action: 'login', pin: $('pin').value, deviceId: S.dev }); S.token = d.token; store('rd2_token', d.token); start(); }
+      catch (e) { if (S.token === '') showLogin(e.message); }
+    };
+  }
+
+  function busy(on) { $('refresh').disabled = on; $('refresh').textContent = on ? '集計中…' : '最新にする'; }
+  function fail(e) { $('main').insertAdjacentHTML('afterbegin', '<div class="err">' + esc(e.message) + '</div>'); }
+
+  async function start() {
+    if (!S.token) return showLogin('');
+    try { S.now = await api({ action: 'now' }); } catch (e) { return; }
+    S.ym = S.ym || S.now.today.slice(0, 7);
+    S.ki = S.ki || S.now.maxKi;
+    stamp();
+    show(S.view);
+  }
+  function stamp() { $('stamp').textContent = S.now && S.now.status['最終集計日時'] ? '最終集計 ' + md(S.now.status['最終集計日時'].slice(0, 10)) + ' ' + S.now.status['最終集計日時'].slice(11, 16) : ''; }
+
+  function show(v) {
+    S.view = v;
+    Array.prototype.forEach.call(document.querySelectorAll('nav button'), function (b) { b.classList.toggle('on', b.dataset.v === v); });
+    S.charts.forEach(function (c) { c.destroy(); });
+    S.charts = [];
+    if (v === 'now') renderNow();
+    if (v === 'month') renderMonth();
+    if (v === 'ki') renderKi();
+  }
+
+  // ── いま ──
+  function renderNow() {
+    var n = S.now, h = '';
+    if (n.status['集計できなかった理由']) h += '<div class="err">' + esc(n.status['集計できなかった理由']) + '</div>';
+    if (n.status['読めなかった源']) h += '<div class="err">読めなかった源：' + esc(n.status['読めなかった源']) + '</div>';
+    h += '<div class="card"><h2>入院中 ' + n.lists.admitted.length + '人</h2>' + (n.lists.admitted.map(function (a) {
+      return '<div class="row"><span>' + esc(a.name) + ' <span class="muted">' + esc(a.staff) + '</span></span><span class="sub">' + md(a.date) + '〜 ' + esc(a.hospital)
+        + ' <span class="tag' + (a.long ? ' warn' : '') + '">' + a.days + '日</span></span></div>';
+    }).join('') || '<div class="muted">いません</div>') + '</div>';
+    h += '<div class="card"><h2>区変中・更新待ち ' + n.lists.pending.length + '人</h2>' + (n.lists.pending.map(function (p) {
+      return '<div class="row"><span>' + esc(p.name) + ' <span class="tag">' + esc(p.kind) + '</span></span><span class="sub">' + md(p.date) + ' ' + esc(p.before) + '→？'
+        + ' <span class="tag' + (p.long ? ' warn' : '') + '">' + (p.days >= 0 ? p.days + '日' : 'あと' + (-p.days) + '日') + '</span></span></div>';
+    }).join('') || '<div class="muted">いません</div>') + '</div>';
+    h += '<div class="card"><h2>確認 ' + n.issues.length + '件</h2>' + (n.issues.slice(0, 50).map(function (i) {
+      return '<div class="row"><span>' + esc(i.kind) + '</span><span class="sub">' + esc(i.source) + '<br>' + esc(i.detail) + '</span></div>';
+    }).join('') || '<div class="muted">ありません</div>') + '</div>';
+    $('main').innerHTML = h;
+  }
+
+  // ── 月の一覧 ──
+  function line(t, e) {
+    var f = [e.f1, e.f2, e.f3, e.f4];
+    if (t === '新規') return md(e.date) + ' 契約 ' + esc([f[0], f[1]].filter(Boolean).join('／'));
+    if (t === '入院') return md(e.date) + '〜' + (e.f4 ? md(e.f4) : '') + ' ' + esc(f[1]) + (e.ongoing ? ' <span class="tag warn">入院中</span>' : '');
+    if (t === '退院') return md(e.f3) + ' 退院（' + md(e.date) + ' 入院）';
+    if (t === '終了') return md(e.date) + ' <span class="tag">' + esc(f[1]) + '</span> ' + esc(f[0]);
+    if (t === 'ケアマネ変更' || t === '主治医変更') return md(e.date) + '〜 ' + esc([f[0], f[1]].filter(Boolean).join(' ')) + ' → ' + esc([f[2], f[3]].filter(Boolean).join(' '));
+    if (t === '区変' || t === '更新') return md(e.date) + ' ' + esc(f[0]) + '→' + esc(f[1] || '？') + ' <span class="muted">' + esc(f[2]) + '</span>';
+    if (t === '増回') return md(e.date) + '〜 ' + esc(f[0]);
+    if (t === '減回') return md(e.date) + 'まで ' + esc(f[1]) + '（' + esc(f[0]) + '）';
+    return md(e.date) + ' ' + esc(f[0]);
+  }
+  async function renderMonth() {
+    $('main').innerHTML = '<div class="pager"><button id="pv">◀</button><b>' + ymLabel(S.ym) + '</b><button id="nx">▶</button></div><div id="mbody" class="muted">読み込み中…</div>';
+    $('pv').onclick = function () { S.ym = addMonths(S.ym, -1); renderMonth(); };
+    $('nx').onclick = function () { S.ym = addMonths(S.ym, 1); renderMonth(); };
+    $('nx').disabled = S.ym >= S.now.today.slice(0, 7);
+    try {
+      var d = await api({ action: 'month', ym: S.ym });
+      $('mbody').className = '';
+      $('mbody').innerHTML = d.groups.map(function (g) {
+        return '<div class="card"><h2>' + esc(g.type) + ' ' + g.count + '</h2>' + (g.rows.map(function (e, i) {
+          return '<div class="row" data-k="' + esc(e.key) + '" data-t="' + esc(e.type) + '" data-n="' + esc(e.name) + '"><span>' + esc(e.name) + ' <span class="muted">' + esc(e.staff) + '</span></span><span class="sub">'
+            + line(g.type, e) + '</span></div>';
+        }).join('') || '<div class="muted">なし</div>') + '</div>';
+      }).join('');
+      Array.prototype.forEach.call(document.querySelectorAll('#mbody .row[data-k]'), function (r) {
+        r.onclick = function () { openFix(r.dataset.k, r.dataset.t, r.dataset.n); };
+      });
+    } catch (e) { $('mbody').innerHTML = ''; fail(e); }
+  }
+
+  // ── 期のダッシュボード ──
+  async function renderKi() {
+    $('main').innerHTML = '<div class="pager"><button id="pv">◀</button><b>第' + S.ki + '期</b><button id="nx">▶</button></div><div id="kbody" class="muted">読み込み中…</div>';
+    $('pv').disabled = S.ki <= S.now.minKi;
+    $('nx').disabled = S.ki >= S.now.maxKi;
+    $('pv').onclick = function () { S.ki--; show('ki'); };
+    $('nx').onclick = function () { S.ki++; show('ki'); };
+    try {
+      var k = await api({ action: 'ki', ki: S.ki }), t = k.totals, h = '';
+      h += '<div class="tiles">' + [['新規', t['新規']], ['終了', t['終了']], ['純増', (t['純増'] > 0 ? '+' : '') + t['純増']], ['入院（延べ）', t['入院']],
+        ['区変・更新', t['区変'] + t['更新']], ['利用者数', k.activeLast == null ? '—' : k.activeLast]].map(function (x) {
+        return '<div class="tile"><small>' + x[0] + '</small><b>' + x[1] + '</b></div>'; }).join('') + '</div>';
+      if (!k.recordedMonths) h += '<div class="muted card">この期はまだ集計した月がありません（集計開始日より前は「記録前」）。</div>';
+      var f = k.funnel, max = Math.max(1, f['営業'], f['問い合わせ'], f['体験'], f['新規']);
+      h += '<div class="grid2"><div class="card"><h2>営業 → 問い合わせ → 体験 → 新規</h2><div class="funnel">' + [['営業', '#7fd4cc'], ['問い合わせ', '#3fbfb3'], ['体験', '#00AA9B'], ['新規', '#00796F']].map(function (x) {
+        return '<div style="height:' + Math.max(18, Math.round(f[x[0]] / max * 100)) + '%;background:' + x[1] + '">' + x[0] + '<br>' + f[x[0]] + '</div>'; }).join('')
+        + '</div><div class="muted" style="margin-top:6px">問い合わせ→体験 ' + (f.trialRate == null ? '—' : f.trialRate + '%') + '　問い合わせ→新規 ' + (f.newRate == null ? '—' : f.newRate + '%') + '</div></div>';
+      h += '<div class="card"><h2>月別（新規・終了・入院と月末利用者数）</h2><div class="chart"><canvas id="c1" role="img" aria-label="月別の新規・終了・入院の棒と月末利用者数の線"></canvas></div></div></div>';
+      h += '<div class="card"><h2>月別件数</h2><div class="scroll"><table><tr><th>月</th>' + ['新規', '終了', '純増', '入院', '退院', 'ケアマネ変更', '主治医変更', '区変', '更新', '増回', '減回', '体験', '営業', '問い合わせ', '利用者数'].map(function (c) {
+        return '<th>' + c.replace('ケアマネ変更', 'CM変更').replace('主治医変更', '主治医') + '</th>'; }).join('') + '</tr>' + k.months.map(function (m) {
+        var cells = m.status === '記録' ? ['新規', '終了', '純増', '入院', '退院', 'ケアマネ変更', '主治医変更', '区変', '更新', '増回', '減回', '体験', '営業', '問い合わせ', '利用者数'].map(function (c) { return '<td>' + m.counts[c] + '</td>'; }).join('')
+          : '<td colspan="15" class="muted" style="text-align:left">' + m.status + '</td>';
+        return '<tr><td>' + (+m.ym.slice(5, 7)) + '月</td>' + cells + '</tr>'; }).join('')
+        + '<tr><th>合計</th>' + ['新規', '終了', '純増', '入院', '退院', 'ケアマネ変更', '主治医変更', '区変', '更新', '増回', '減回', '体験', '営業', '問い合わせ'].map(function (c) { return '<th>' + t[c] + '</th>'; }).join('') + '<th></th></tr></table></div>'
+        + '<div class="muted">入院は入院していた月ごとに1件（延べ）。記録前・未来の月は合計に入れません。</div></div>';
+      h += '<div class="grid2"><div class="card"><h2>終了理由</h2>' + k.endReasons.map(function (r) { return '<div class="row"><span>' + esc(r.category) + '</span><span>' + r.count + '</span></div>'; }).join('') + '</div>';
+      h += '<div class="card"><h2>紹介元の居宅（新規）</h2>' + (k.kyotakuRank.map(function (r, i) { return '<div class="row"><span>' + (i + 1) + '. ' + esc(r.name) + '</span><span>' + r.count + '</span></div>'; }).join('') || '<div class="muted">なし</div>') + '</div></div>';
+      h += '<div class="card"><h2>担当リハ別</h2><table><tr><th>担当</th><th>新規</th><th>終了</th><th>入院</th><th>営業</th></tr>' + k.byStaff.map(function (s) {
+        return '<tr><td>' + esc(s.name) + '</td><td>' + s['新規'] + '</td><td>' + s['終了'] + '</td><td>' + s['入院'] + '</td><td>' + s['営業'] + '</td></tr>'; }).join('') + '</table></div>';
+      $('kbody').className = '';
+      $('kbody').innerHTML = h;
+      drawChart(k);
+    } catch (e) { $('kbody').innerHTML = ''; fail(e); }
+  }
+  function drawChart(k) {
+    if (!window.Chart) return;
+    var ms = k.months, val = function (m, c) { return m.status === '記録' ? m.counts[c] : null; };
+    S.charts.push(new Chart($('c1'), {
+      type: 'bar',
+      data: { labels: ms.map(function (m) { return (+m.ym.slice(5, 7)) + '月'; }), datasets: [
+        { type: 'bar', label: '新規', data: ms.map(function (m) { return val(m, '新規'); }), backgroundColor: '#00AA9B', borderRadius: 3, maxBarThickness: 14, yAxisID: 'y' },
+        { type: 'bar', label: '終了', data: ms.map(function (m) { return val(m, '終了'); }), backgroundColor: '#eb6834', borderRadius: 3, maxBarThickness: 14, yAxisID: 'y' },
+        { type: 'bar', label: '入院', data: ms.map(function (m) { return val(m, '入院'); }), backgroundColor: '#eda100', borderRadius: 3, maxBarThickness: 14, yAxisID: 'y' },
+        { type: 'line', label: '月末利用者数', data: ms.map(function (m) { return val(m, '利用者数'); }), borderColor: '#6250d6', borderWidth: 2, pointRadius: 3, yAxisID: 'y2', spanGaps: false }] },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { boxWidth: 10, font: { size: 11 } } } },
+        scales: { x: { grid: { display: false } }, y: { beginAtZero: true, ticks: { precision: 0 }, title: { display: true, text: '件数' } },
+                  y2: { position: 'right', beginAtZero: false, grid: { display: false }, title: { display: true, text: '利用者数' } } } } }));
+  }
+
+  // ── 記録（追加）と、一覧の行からの訂正・対象外 ──
+  function sheet(html) {
+    var el = document.createElement('div');
+    el.className = 'sheet';
+    el.innerHTML = '<div>' + html + '</div>';
+    el.onclick = function (ev) { if (ev.target === el) el.remove(); };
+    document.body.appendChild(el);
+    return el;
+  }
+  async function send(el, manual) {
+    var btn = el.querySelector('.primary');
+    btn.disabled = true;
+    try {
+      await api({ action: 'add', requestId: newId(), manual: manual });
+      el.remove();
+      alertBar('保存しました。「最新にする」で一覧に反映されます');
+    } catch (e) { btn.disabled = false; el.querySelector('.msg').innerHTML = '<div class="err">' + esc(e.message) + '</div>'; }
+  }
+  function alertBar(msg) { $('main').insertAdjacentHTML('afterbegin', '<div class="card" style="border-color:var(--teal)">' + esc(msg) + '</div>'); }
+  function openAdd() {
+    var types = S.now.types, labels = S.now.fieldLabels;
+    var el = sheet('<h2>記録する</h2><div class="msg"></div><label>種類</label><select id="ty">' + types.map(function (t) { return '<option' + (t === '体験' ? ' selected' : '') + '>' + t + '</option>'; }).join('') + '</select>'
+      + '<label>日付</label><input id="dt" type="date" value="' + S.now.today + '"><label>利用者名</label><input id="nm" list="names" autocomplete="off"><datalist id="names">'
+      + S.now.names.map(function (n) { return '<option value="' + esc(n) + '">'; }).join('') + '</datalist><div id="fs"></div><label>メモ</label><input id="mm">'
+      + '<div class="btns"><button id="cx">やめる</button><button class="primary" id="ok">保存</button></div>');
+    var fields = function () {
+      var L = labels[el.querySelector('#ty').value] || [];
+      el.querySelector('#fs').innerHTML = [0, 1, 2].filter(function (i) { return L[i] && L[i] !== '終端'; }).map(function (i) {
+        return '<label>' + esc(L[i]) + '</label><input id="f' + (i + 1) + '">'; }).join('');
+    };
+    el.querySelector('#ty').onchange = fields;
+    fields();
+    el.querySelector('#cx').onclick = function () { el.remove(); };
+    el.querySelector('#ok').onclick = function () {
+      var v = function (id) { var x = el.querySelector('#' + id); return x ? x.value.trim() : ''; };
+      if (!v('nm')) { el.querySelector('.msg').innerHTML = '<div class="err">利用者名を入れてください</div>'; return; }
+      send(el, { 操作: '追加', 種類: v('ty'), 日付: v('dt'), 利用者名: v('nm'), 項目1: v('f1'), 項目2: v('f2'), 項目3: v('f3'), メモ: v('mm') });
+    };
+  }
+  function openFix(key, type, name) {
+    var L = S.now.fieldLabels[type] || [];
+    var el = sheet('<h2>' + esc(name) + '（' + esc(type) + '）</h2><div class="msg"></div><div class="muted">空欄の所は変えません。</div>'
+      + '<label>日付を直す</label><input id="dt" type="date">' + [0, 1, 2].filter(function (i) { return L[i] && L[i] !== '終端'; }).map(function (i) {
+        return '<label>' + esc(L[i]) + 'を直す</label>' + (type === '終了' && i === 1 ? '<select id="f2"><option value=""></option>' + ['施設入所', 'ご逝去', '卒業（目標達成）', '他事業所へ', '本人・家族の意向', '長期入院', 'その他'].map(function (c) { return '<option>' + c + '</option>'; }).join('') + '</select>' : '<input id="f' + (i + 1) + '">');
+      }).join('') + '<label>メモ</label><input id="mm">'
+      + '<div class="btns"><button id="ex">対象外にする</button><button class="primary" id="ok">直す</button></div>');
+    var v = function (id) { var x = el.querySelector('#' + id); return x ? x.value.trim() : ''; };
+    el.querySelector('#ok').onclick = function () { send(el, { 操作: '訂正', キー: key, 日付: v('dt'), 項目1: v('f1'), 項目2: v('f2'), 項目3: v('f3'), メモ: v('mm') }); };
+    var armed = false;
+    el.querySelector('#ex').onclick = function () {
+      if (!armed) { armed = true; el.querySelector('#ex').textContent = 'もう一度押すと対象外'; return; }   // GAS 系の画面は confirm を使わない（2回押し）
+      send(el, { 操作: '対象外', キー: key, メモ: v('mm') });
+    };
+  }
+
+  Array.prototype.forEach.call(document.querySelectorAll('nav button'), function (b) { b.onclick = function () { if (S.now) show(b.dataset.v); }; });
+  $('fab').onclick = function () { if (S.now) openAdd(); };
+  $('refresh').onclick = async function () {
+    if (!S.now) return;
+    busy(true);
+    try { S.now = await api({ action: 'refresh' }); stamp(); show(S.view); } catch (e) { fail(e); }
+    busy(false);
+  };
+  start();
+})();
+</script>
+</body>
+</html>
