@@ -54,6 +54,15 @@ input, select, textarea { width:100%; padding:9px 10px; border:1px solid var(--l
 .kpi span { white-space:nowrap; margin:0 7px; }
 .kpi b { font-weight:600; }
 .kpi em { font-style:normal; font-size:11px; color:var(--sub); }
+.iq { padding:8px 0; border-bottom:1px solid var(--line); cursor:pointer; }
+.iq:last-child { border-bottom:0; }
+.iq1 { display:flex; justify-content:space-between; align-items:center; gap:8px; font-size:14px; }
+.iq3 { font-size:12px; margin-top:3px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.iq.open .iq3 { display:block; }
+.iq a { font-size:12px; color:var(--teal-d); }
+.tag.amber { background:#fff4d6; color:#8a5a00; }
+.tag.gray { background:var(--line); color:var(--sub); }
+@media (prefers-color-scheme: dark) { .tag.amber { background:#3a2f12; color:#f2c14e; } }
 </style>
 </head>
 <body>
@@ -130,6 +139,14 @@ input, select, textarea { width:100%; padding:9px 10px; border:1px solid var(--l
     var n = S.now, h = '';
     if (n.status['集計できなかった理由']) h += '<div class="err">' + esc(n.status['集計できなかった理由']) + '</div>';
     if (n.status['読めなかった源']) h += '<div class="err">読めなかった源：' + esc(n.status['読めなかった源']) + '</div>';
+    var iq = n.inquiries || [];
+    var progCls = function (p) { return p === '契約予定' ? '' : (p === '本人・家族意向確認中' ? ' amber' : ' gray'); };
+    h += '<div class="card"><h2>問い合わせ（3か月以内・未完了） ' + iq.length + '件</h2>' + (iq.map(function (q, i) {
+      return '<div class="iq" data-i="' + i + '"><div class="iq1"><span><span class="muted">' + md(q.date) + '</span> <b>' + esc(q.name) + '</b></span>'
+        + '<span class="tag' + progCls(q.progress) + '">' + esc(q.progress || '未記入') + '</span></div>'
+        + '<div class="muted">CM ' + esc(q.cm || '—') + ' ・ 担当予定 ' + esc(q.staff || '—') + '</div>'
+        + (q.note ? '<div class="iq3">' + esc(q.note) + '</div>' : '') + '</div>';
+    }).join('') || '<div class="muted">ありません</div>') + '</div>';
     h += '<div class="card"><h2>入院中 ' + n.lists.admitted.length + '人</h2>' + (n.lists.admitted.map(function (a) {
       return '<div class="row"><span>' + esc(a.name) + ' <span class="muted">' + esc(a.staff) + '</span></span><span class="sub">' + md(a.date) + '〜 ' + esc(a.hospital)
         + ' <span class="tag' + (a.long ? ' warn' : '') + '">' + a.days + '日</span></span></div>';
@@ -142,6 +159,16 @@ input, select, textarea { width:100%; padding:9px 10px; border:1px solid var(--l
       return '<div class="row"><span>' + esc(i.kind) + '</span><span class="sub">' + esc(i.source) + '<br>' + esc(i.detail) + '</span></div>';
     }).join('') || '<div class="muted">ありません</div>') + '</div>';
     $('main').innerHTML = h;
+    Array.prototype.forEach.call(document.querySelectorAll('.iq'), function (el) {
+      el.onclick = function (ev) {
+        if (ev.target.tagName === 'A') return;
+        var q = iq[+el.dataset.i];
+        el.classList.toggle('open');
+        if (el.classList.contains('open') && !el.querySelector('a') && n.inquirySheetUrl) {
+          el.insertAdjacentHTML('beforeend', '<div><a href="' + esc(n.inquirySheetUrl + '&range=A' + q.row) + '" target="_blank" rel="noopener">シートで開く ↗</a></div>');
+        }
+      };
+    });
   }
 
   // ── 月の一覧 ──
