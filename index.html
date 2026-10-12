@@ -50,6 +50,10 @@ input, select, textarea { width:100%; padding:9px 10px; border:1px solid var(--l
 .funnel { display:flex; align-items:flex-end; gap:6px; height:110px; }
 .funnel div { flex:1; border-radius:6px 6px 0 0; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; font-size:11px; padding-bottom:4px; color:#fff; }
 .chart { position:relative; height:220px; }
+.kpi { text-align:center; margin:0 0 12px; line-height:2; font-size:15px; }
+.kpi span { white-space:nowrap; margin:0 7px; }
+.kpi b { font-weight:600; }
+.kpi em { font-style:normal; font-size:11px; color:var(--sub); }
 </style>
 </head>
 <body>
@@ -161,7 +165,11 @@ input, select, textarea { width:100%; padding:9px 10px; border:1px solid var(--l
     try {
       var d = await api({ action: 'month', ym: S.ym });
       $('mbody').className = '';
-      $('mbody').innerHTML = d.groups.map(function (g) {
+      var kv = function (v) { return v == null ? '—' : v; };
+      var kpi = (d.kpi || []).map(function (k) {
+        return '<span>' + esc(k.label) + ' <b>' + kv(k.value) + '</b><em>（' + kv(k.prev) + '）</em></span>';
+      }).join('');
+      $('mbody').innerHTML = (kpi ? '<div class="kpi">' + kpi + '</div>' : '') + d.groups.map(function (g) {
         return '<div class="card"><h2>' + esc(g.type) + ' ' + g.count + '</h2>' + (g.rows.map(function (e, i) {
           return '<div class="row" data-k="' + esc(e.key) + '" data-t="' + esc(e.type) + '" data-n="' + esc(e.name) + '"><span>' + esc(e.name) + ' <span class="muted">' + esc(e.staff) + '</span></span><span class="sub">'
             + line(g.type, e) + '</span></div>';
