@@ -225,7 +225,7 @@ input, select, textarea { width:100%; padding:9px 10px; border:1px solid var(--l
       h += '<div class="grid2"><div class="card"><h2>営業 → 問い合わせ → 体験 → 新規</h2><div class="funnel">' + [['営業', '#7fd4cc'], ['問い合わせ', '#3fbfb3'], ['体験', '#00AA9B'], ['新規', '#00796F']].map(function (x) {
         return '<div style="height:' + Math.max(18, Math.round(f[x[0]] / max * 100)) + '%;background:' + x[1] + '">' + x[0] + '<br>' + f[x[0]] + '</div>'; }).join('')
         + '</div><div class="muted" style="margin-top:6px">問い合わせ→体験 ' + (f.trialRate == null ? '—' : f.trialRate + '%') + '　問い合わせ→新規 ' + (f.newRate == null ? '—' : f.newRate + '%') + '</div>'
-        + (k.months.some(function (m) { return m.status === '営業のみ'; }) ? '<div class="muted">流れと率は全項目そろった月だけで数えています（営業・問い合わせの合計は表と上の数字）</div>' : '')
+        + (k.months.some(function (m) { return m.status === '一部'; }) ? '<div class="muted">流れと率は全項目そろった月だけで数えています。集計開始日より前の月の新規・入院・終了は『過去の件数』タブ（会議資料の数字・入院は人数）です</div>' : '')
         + '</div>';
       h += '<div class="card"><h2>月別（新規・終了・入院と月末利用者数）</h2><div class="chart"><canvas id="c1" role="img" aria-label="月別の新規・終了・入院の棒と月末利用者数の線"></canvas></div></div></div>';
       h += '<div class="card"><h2>月別件数</h2><div class="scroll"><table><tr><th>月</th>' + ['新規', '終了', '純増', '入院', '退院', 'ケアマネ変更', '主治医変更', '区変', '更新', '増回', '減回', '体験', '営業', '問い合わせ', '利用者数'].map(function (c) {
